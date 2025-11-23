@@ -54,3 +54,12 @@ jobs:
         publish_dir: ./
         publish_branch: gh-pages
         force_orphan: true
+
+    - name: Enable GitHub Pages
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        curl -X PATCH \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }} \
+          -d '{"name":"${{ github.event.repository.name }}","has_issues":true,"has_projects":true,"has_wiki":false,"default_branch":"main","allow_squash_merge":true,"allow_merge_commit":true,"allow_rebase_merge":true,"delete_branch_on_merge":true,"has_downloads":true,"has_pages":true,"auto_init":false,"is_template":false,"visibility":"public","allow_auto_merge":true,"delete_branch_on_merge":true}'
