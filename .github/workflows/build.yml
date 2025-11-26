@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# --- FIX: ADDED PERMISSIONS BLOCK HERE ---
+permissions:
+  contents: write # Required for pushing to gh-pages branch
+  pages: write    # Required for the API call to enable GitHub Pages
+  id-token: write # Recommended for deployment actions, often required by peaceiris action
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -50,11 +56,13 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v3
       with:
+        # This token now has 'write' permissions thanks to the block above
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./
         publish_branch: gh-pages
         force_orphan: true
 
+    # The 'curl' command to enable GitHub Pages is now authorized to make changes
     - name: Enable GitHub Pages
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
