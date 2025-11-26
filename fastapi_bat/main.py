@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,13 @@ from datetime import datetime
 from config import settings
 from search import router as search_router
 from recaptcha import router as recaptcha_router
+
+# Налаштування логування
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="BAT API Server", description="FastAPI replacement for bat folder functionality")
 
@@ -281,6 +289,7 @@ async def handle_mailform(request: Request, background_tasks: BackgroundTasks):
     Handle form submissions sent as JSON or application/x-www-form-urlencoded and send emails
     """
     try:
+        logger.info(f"Received form submission from {request.client.host}")
         content_type = request.headers.get("content-type", "")
         mail_data = None
 
@@ -319,10 +328,14 @@ async def handle_mailform(request: Request, background_tasks: BackgroundTasks):
                 additional_fields=additional_fields_dict
             )
         
+        logger.info(f"Processing form of type: {mail_data.form_type} from {mail_data.email}")
+        
         # Add to background task to avoid blocking the response
         background_tasks.add_task(send_email_async, mail_data, request.url.hostname)
+        logger.info("Email task added to background tasks")
         return {"status": "success", "message": "Form submitted successfully"}
     except Exception as e:
+        logger.error(f"Error processing form submission: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Mount static files (HTML, CSS, JS, images, etc.) from the parent directory

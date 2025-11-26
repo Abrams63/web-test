@@ -1,9 +1,17 @@
+import logging
 from fastapi import APIRouter, Query
 from typing import Optional
 import os
 import re
 from pathlib import Path
 from config import settings
+
+# Налаштування логування
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -51,6 +59,7 @@ async def search(
     """
     Search functionality similar to rd-search.php
     """
+    logger.info(f"Search request received with query: {s}")
     if not s or s == "?s=":
         s = ""
     
@@ -67,6 +76,7 @@ async def search(
     
     # Get all files to search
     files = list_files(search_dir, search_in)
+    logger.info(f"Found {len(files)} files to search in")
     
     final_result = []
     file_count = 0
@@ -137,9 +147,9 @@ async def search(
                 
                 # Highlight search term in snippet
                 highlighted_snippet = re.sub(
-                    re.escape(search_term), 
-                    f'<span class="search">{search_term}</span>', 
-                    snippet, 
+                    re.escape(search_term),
+                    f'<span class="search">{search_term}</span>',
+                    snippet,
                     flags=re.IGNORECASE
                 )
                 
@@ -154,7 +164,7 @@ async def search(
             
         except Exception as e:
             # Skip files that can't be read
-            print(f"Error reading file {file_path}: {str(e)}")
+            logger.error(f"Error reading file {file_path}: {str(e)}")
             continue
     
     # Sort results by number of matches (descending)
@@ -230,6 +240,7 @@ async def search(
     </div>
     """
     
+    logger.info(f"Search completed with {match_count} results")
     return {
         "query": search_term,
         "results_count": match_count,
